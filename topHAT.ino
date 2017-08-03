@@ -5,7 +5,7 @@
 #define DATA_PIN    6
 #define LED_TYPE    WS2812B
 #define COLOR_ORDER GRB
-#define NUM_LEDS   178
+#define NUM_LEDS   175
 
 // Instantiate color array object, which is the code-representation of the
 // physical pixel strip.
@@ -19,10 +19,10 @@ CRGB leds[NUM_LEDS];
 
 // Mapping constants
 #define TRI_A          28
-#define TRI_B          35
+#define TRI_B          33
 #define TRI_C          21
 #define TRI_D          32
-#define TRI_E          39
+#define TRI_E          38
 #define TRI_F          23
 
 
@@ -34,11 +34,11 @@ CRGB leds[NUM_LEDS];
 
 // Maps of continuous linear physical pixel arrays
 uint8_t triangleA[TRI_A] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27};
-uint8_t triangleB[TRI_B] = {28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62};
-uint8_t triangleC[TRI_C] = {63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83};
-uint8_t triangleD[TRI_D] = {84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115};
-uint8_t triangleE[TRI_E] = {116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154};
-uint8_t triangleF[TRI_F] = {155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177};
+uint8_t triangleB[TRI_B] = {28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60};
+uint8_t triangleC[TRI_C] = {61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81};
+uint8_t triangleD[TRI_D] = {82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113};
+uint8_t triangleE[TRI_E] = {114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151};
+uint8_t triangleF[TRI_F] = {152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174};
 
 int startA, startB, startC, startD, startE, startF;
 
@@ -60,8 +60,8 @@ void setup() {
 
 // List of patterns to cycle through.  Each is defined as a separate function below.
 typedef void (*SimplePatternList[])();
-SimplePatternList gPatterns = {testTriangleSolid, testTriangleA, totalAccident, sinelon, rainbow, rainbowWithGlitter, addGlitterAdd, sinelon, confetti, rainbowGlitter, juggle, bpm};
-
+SimplePatternList gPatterns = { totalAccident, rainbowChase, sinelon, rainbow, rainbowWithGlitter, addGlitterAdd, sinelon, rainbowGlitter, juggle, bpm};
+ 
 // here is the list rainbow, rainbowWithGlitter, rainbowGlitter, sinelon, confetti, bpm, starWars, lightning, juggle, addGlitterAdd
 
 uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
@@ -124,13 +124,14 @@ void addGlitterAdd()
     delay(15);
 }
 
-void confetti()
-{
-  // random colored speckles that blink in and fade smoothly
-  fadeToBlackBy( leds, NUM_LEDS, 10);
-  int pos = random16(NUM_LEDS);
-  leds[pos] += CHSV( gHue + random8(64), 200, 255);
-}
+//looks bad, too flickery - fixable?
+//void confetti()
+//{
+//  // random colored speckles that blink in and fade smoothly
+//  fadeToBlackBy( leds, NUM_LEDS, 10);
+//  int pos = random16(NUM_LEDS);
+//  leds[pos] += CHSV( gHue + random8(64), 200, 255);
+//}
 
 void sinelon()
 {
@@ -236,81 +237,89 @@ int getTriangle(int index){
 ** by Lu
 */
 
+
 // looks good! -Tom
-void testTriangleA() {
-    for (uint8_t i = 0; i < TRI_A; i++) {
-        leds[triangleA[i]] = CRGB::Purple;
+void rainbowChase() {
+      for (uint8_t i = 0; i < TRI_A; i=i+3) {
+          leds[triangleA[i]] = CRGB::Purple;
         FastLED.show();
-        delay(25);
+        delay(50);
         FastLED.clear();
     }
 
-    for (uint8_t i = 0; i < TRI_B; i++) {
+      for (uint8_t i = 0; i < TRI_B; i=i+3) {
         leds[triangleB[i]] = CRGB::Blue;
         FastLED.show();
-        delay(25);
+        delay(50);
         FastLED.clear();
     }
 
-    for (uint8_t i = 0; i < TRI_C; i++) {
+    for (uint8_t i = 0; i < TRI_C; i=i+3) {
         leds[triangleC[i]] = CRGB::Green;
         FastLED.show();
-        delay(25);
+        delay(50);
         FastLED.clear();
     }
 
-    for (uint8_t i = 0; i < TRI_D; i++) {
+    for (uint8_t i = 0; i < TRI_D; i=i+3) {
         leds[triangleD[i]] = CRGB::Yellow;
         FastLED.show();
-        delay(25);
+        delay(50);
         FastLED.clear();
     }
 
-    for (uint8_t i = 0; i < TRI_E; i++) {
+    for (uint8_t i = 0; i < TRI_E; i=i+3) {
         leds[triangleE[i]] = CRGB::Orange;
         FastLED.show();
-        delay(25);
+        delay(50);
         FastLED.clear();
     }
 
-    for (uint8_t i = 0; i < TRI_F; i++) {
+    for (uint8_t i = 0; i < TRI_F; i=i+3) {
         leds[triangleF[i]] = CRGB::Red;
         FastLED.show();
-        delay(25);
+        delay(50);
         FastLED.clear();
     }
 
 }
 
-/*
-** by Lu
-*/
-void testTriangleSolid() {
-    // fill_solid is a bit more complicated than this - check the FastLED documentation.
-    // The first parameter is actually a "pointer" (difficult topic) to the array
-    // element from which you want to start filling-solid - it just so happens that
-    // passing an array variable automatically passes a pointer to its first element.
-    // If you want to fill_solid starting from any index other than the first element
-    // of leds[], you have to use this notation: &leds[index]. Example below.
-    // NB: now this function does almost exactly what totalAccident() does.
 
-    // fill_solid(leds, TRI_A, CRGB::Red);
-    // fill_solid(leds, TRI_B, CRGB::Orange);
-    // fill_solid(leds, TRI_C, CRGB::Yellow);
-    // fill_solid(leds, TRI_D, CRGB::Green);
-    // fill_solid(leds, TRI_E, CRGB::Blue);
-    // fill_solid(leds, TRI_F, CRGB::Purple);
-    fill_solid(&leds[startA], TRI_A, CRGB::Red);
-    fill_solid(&leds[startB], TRI_B, CRGB::Orange);
-    fill_solid(&leds[startC], TRI_C, CRGB::Yellow);
-    fill_solid(&leds[startD], TRI_D, CRGB::Green);
-    fill_solid(&leds[startE], TRI_E, CRGB::Blue);
-    fill_solid(&leds[startF], TRI_F, CRGB::Purple);
+// KEEP BELOW SECTION FOR UNDERSTANDING BUT DON'T NEED AS SAME AS TOTAL ACCIDENT 
+//void triangleSolid() {
+//    // fill_solid is a bit more complicated than this - check the FastLED documentation.
+//    // The first parameter is actually a "pointer" (difficult topic) to the array
+//    // element from which you want to start filling-solid - it just so happens that
+//    // passing an array variable automatically passes a pointer to its first element.
+//    // If you want to fill_solid starting from any index other than the first element
+//    // of leds[], you have to use this notation: &leds[index]. Example below.
+//    // NB: now this function does almost exactly what totalAccident() does.
+//
+//    // fill_solid(leds, TRI_A, CRGB::Red);
+//    // fill_solid(leds, TRI_B, CRGB::Orange);
+//    // fill_solid(leds, TRI_C, CRGB::Yellow);
+//    // fill_solid(leds, TRI_D, CRGB::Green);
+//    // fill_solid(leds, TRI_E, CRGB::Blue);
+//    // fill_solid(leds, TRI_F, CRGB::Purple);
+//    fill_solid(&leds[startA], TRI_A, CRGB::Red);
+//    fill_solid(&leds[startB], TRI_B, CRGB::Orange);
+//    fill_solid(&leds[startC], TRI_C, CRGB::Yellow);
+//    fill_solid(&leds[startD], TRI_D, CRGB::Green);
+//    fill_solid(&leds[startE], TRI_E, CRGB::Blue);
+//    fill_solid(&leds[startF], TRI_F, CRGB::Purple);
+//}
 
-    // This is pointless because show() and delay() are both called in loop()
-    // and there's no point trying to adjust framerate here anyway if no colours
-    // are changing from frame to frame.
-    // FastLED.show();
-    // delay(25);
-    // FastLED.clear();
-}
+
+// BABE CAN YOU HELP ME GET THE BELOW WORKING - its from neopixel so calls 'strip' which i know we aren't using. 
+// I tried using variations of CRGB, leds etc as I thought that was fast led equivalent to instatiating 'strip'?
+
+//// Fill the dots one after the other with a color
+//void colorWipe(uint32_t c, uint8_t wait) {
+//  for(uint16_t i=0; i<NUM_LEDS; i++) {
+//      strip.setPixelColor(i, c);
+// 
+////  }
+//
+
+
+
