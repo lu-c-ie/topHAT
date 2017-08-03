@@ -1,5 +1,6 @@
-#include "FastLED.h"
+// TODO: adhere stringently to precise coding standards, especially regarding indentation!
 
+#include "FastLED.h"
 
 #define DATA_PIN    6
 #define LED_TYPE    WS2812B
@@ -24,7 +25,7 @@ CRGB leds[NUM_LEDS];
 #define TRI_E          39
 #define TRI_F          23
 
-    
+
 #define MAX_STRIP_LENGTH  39
 #define N_STRIPS          6
 
@@ -39,8 +40,17 @@ uint8_t triangleD[TRI_D] = {84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 
 uint8_t triangleE[TRI_E] = {116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154};
 uint8_t triangleF[TRI_F] = {155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177};
 
+int startA, startB, startC, startD, startE, startF;
 
 void setup() {
+
+    startA = 0;
+    startB = TRI_A;
+    startC = TRI_A+TRI_B;
+    startD = TRI_A+TRI_B+TRI_C;
+    startE = TRI_A+TRI_B+TRI_C+TRI_D;
+    startF = TRI_A+TRI_B+TRI_C+TRI_D+TRI_E;
+
     // tell FastLED about the LED strip configuration
     FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     FastLED.setBrightness(BRIGHTNESS);
@@ -58,7 +68,7 @@ uint8_t gCurrentPatternNumber = 0; // Index number of which pattern is current
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
 void loop() {
-  
+
     // Call the current pattern function once, updating the 'leds' array
     gPatterns[gCurrentPatternNumber]();
 
@@ -72,29 +82,26 @@ void loop() {
     EVERY_N_SECONDS(PATTERN_CYCLER_SECONDS) { nextPattern(); } // change patterns periodically
 }
 
-
-
-
 void nextPattern()
 {
   // add one to the current pattern number, and wrap around at the end
   gCurrentPatternNumber = (gCurrentPatternNumber + 1) % ARRAY_SIZE( gPatterns);
 }
 
-void rainbow() 
+void rainbow()
 {
   // FastLED's built-in rainbow generator
   fill_rainbow( leds, NUM_LEDS, gHue, 7);
 }
 
-void rainbowWithGlitter() 
+void rainbowWithGlitter()
 {
   // built-in FastLED rainbow, plus some random sparkly glitter
   rainbow();
   addGlitter(80);
 }
 
-void addGlitter( fract8 chanceOfGlitter) 
+void addGlitter( fract8 chanceOfGlitter)
 {
   if( random8() < chanceOfGlitter) {
     leds[ random16(NUM_LEDS) ] += CRGB::White;
@@ -117,7 +124,7 @@ void addGlitterAdd()
     delay(15);
 }
 
-void confetti() 
+void confetti()
 {
   // random colored speckles that blink in and fade smoothly
   fadeToBlackBy( leds, NUM_LEDS, 10);
@@ -154,25 +161,76 @@ void juggle() {
   }
 }
 
+/*
+** by Lu
+*/
 void totalAccident() {
   // random primary colour chases and glitter
- 
- for (uint8_t i = 0; i < NUM_LEDS; i++) {
-  leds[triangleA[i]] += CRGB::Purple;
-  leds[triangleB[i]] += CRGB::Blue;
-  leds[triangleC[i]] += CRGB::Green;
-  leds[triangleD[i]] += CRGB::Yellow;
-  leds[triangleE[i]] += CRGB::Orange;
-  leds[triangleF[i]] += CRGB::Red;
-  FastLED.show();
-   delay(100);
-   FastLED.clear();
-  }
+    uint8_t hue = 0;
+    for (uint8_t i = 0; i < NUM_LEDS; i++) {
+        // This approach causes a runtime error, which is a bug that happens
+        // when the program runs on the Teensy (as opposed to when Arduino IDE
+        // attempts to compile). The error is that you attempt to access elements
+        // in the TriangleX[] arrays at indices which don't exist. For example,
+        // imagine when i == 169 and you attempt to access triangleA[69]. Since
+        // TRI_A == 28, and in turn, ARRAY_SIZE(triangleA) == 28, you induce an
+        // Array Index Out of Bounds Exception.
+        // I've written a helper function called getTriangle() to help.
+        // leds[triangleA[i]] += CRGB::Purple;
+        // leds[triangleB[i]] += CRGB::Blue;
+        // leds[triangleC[i]] += CRGB::Green;
+        // leds[triangleD[i]] += CRGB::Yellow;
+        // leds[triangleE[i]] += CRGB::Orange;
+        // leds[triangleF[i]] += CRGB::Red;
+
+        // Putting show(), delay(), and clear() inside this for-loop makes it so
+        // only one LED from each triangle is lit at a time, and there's a 100ms
+        // delay between consecutive LEDs. Is this intended?
+        // FastLED.show();
+        // delay(100);
+        // FastLED.clear();
+
+        // My method uses 'hue' which changes with time via 'gHue', along with
+        // getTriangle() to figure out which triangle an index belongs to and
+        // the setHue() function which sets a pixel to an HSV colour with S = 100%
+        // and V = 100% (look up HSV versus RGB - it essentially chooses a location
+        // on a rainbow based on a 0-255 input)
+        hue = gHue + 255 * getTriangle(i)/N_STRIPS;
+        leds[i].setHue(hue);
+    }
 }
 
+/*
+** by Tom
+*/
+int getTriangle(int index){
+    for (int i = 0; i < TRI_A; i++) {
+        if (triangleA[i] == index) return 0;
+    }
+    for (int i = 0; i < TRI_B; i++) {
+        if (triangleB[i] == index) return 1;
+    }
+    for (int i = 0; i < TRI_C; i++) {
+        if (triangleC[i] == index) return 2;
+    }
+    for (int i = 0; i < TRI_D; i++) {
+        if (triangleD[i] == index) return 3;
+    }
+    for (int i = 0; i < TRI_E; i++) {
+        if (triangleE[i] == index) return 4;
+    }
+    for (int i = 0; i < TRI_F; i++) {
+        if (triangleF[i] == index) return 5;
+    }
+    return -1;
+}
+
+/*
+** by Lu
+*/
 //void colorTri() {
 //  // each triangle different colours
-// 
+//
 // for (uint8_t i = 0; i < NUM_LEDS); {
 //  leds[triangleA[i]] += CRGB::Purple;
 //  leds[triangleB[i]] += CRGB::Blue;
@@ -186,66 +244,85 @@ void totalAccident() {
 //  }
 //}
 
+/*
+** by Lu
+*/
+
+// looks good! -Tom
 void testTriangleA() {
     for (uint8_t i = 0; i < TRI_A; i++) {
         leds[triangleA[i]] = CRGB::Purple;
-           FastLED.show();
+        FastLED.show();
         delay(25);
         FastLED.clear();
     }
 
-     for (uint8_t i = 0; i < TRI_B; i++) {
+    for (uint8_t i = 0; i < TRI_B; i++) {
         leds[triangleB[i]] = CRGB::Blue;
-           FastLED.show();
+        FastLED.show();
         delay(25);
         FastLED.clear();
     }
 
-    
     for (uint8_t i = 0; i < TRI_C; i++) {
         leds[triangleC[i]] = CRGB::Green;
-           FastLED.show();
+        FastLED.show();
         delay(25);
         FastLED.clear();
     }
 
-     for (uint8_t i = 0; i < TRI_D; i++) {
+    for (uint8_t i = 0; i < TRI_D; i++) {
         leds[triangleD[i]] = CRGB::Yellow;
-           FastLED.show();
+        FastLED.show();
         delay(25);
         FastLED.clear();
     }
 
-     for (uint8_t i = 0; i < TRI_E; i++) {
+    for (uint8_t i = 0; i < TRI_E; i++) {
         leds[triangleE[i]] = CRGB::Orange;
-           FastLED.show();
+        FastLED.show();
         delay(25);
         FastLED.clear();
     }
 
-     for (uint8_t i = 0; i < TRI_F; i++) {
+    for (uint8_t i = 0; i < TRI_F; i++) {
         leds[triangleF[i]] = CRGB::Red;
-           FastLED.show();
+        FastLED.show();
         delay(25);
         FastLED.clear();
     }
-       
+
 }
 
+/*
+** by Lu
+*/
 void testTriangleSolid() {
+    // fill_solid is a bit more complicated than this - check the FastLED documentation.
+    // The first parameter is actually a "pointer" (difficult topic) to the array
+    // element from which you want to start filling-solid - it just so happens that
+    // passing an array variable automatically passes a pointer to its first element.
+    // If you want to fill_solid starting from any index other than the first element
+    // of leds[], you have to use this notation: &leds[index]. Example below.
+    // NB: now this function does almost exactly what totalAccident() does.
 
-  fill_solid(leds, TRI_A, CRGB::Red);
-  fill_solid(leds, TRI_B, CRGB::Orange);
-  fill_solid(leds, TRI_C, CRGB::Yellow);
-  fill_solid(leds, TRI_D, CRGB::Green);
-  fill_solid(leds, TRI_E, CRGB::Blue);
-  fill_solid(leds, TRI_F, CRGB::Purple);
+    // fill_solid(leds, TRI_A, CRGB::Red);
+    // fill_solid(leds, TRI_B, CRGB::Orange);
+    // fill_solid(leds, TRI_C, CRGB::Yellow);
+    // fill_solid(leds, TRI_D, CRGB::Green);
+    // fill_solid(leds, TRI_E, CRGB::Blue);
+    // fill_solid(leds, TRI_F, CRGB::Purple);
+    fill_solid(&leds[startA], TRI_A, CRGB::Red);
+    fill_solid(&leds[startB], TRI_B, CRGB::Orange);
+    fill_solid(&leds[startC], TRI_C, CRGB::Yellow);
+    fill_solid(&leds[startD], TRI_D, CRGB::Green);
+    fill_solid(&leds[startE], TRI_E, CRGB::Blue);
+    fill_solid(&leds[startF], TRI_F, CRGB::Purple);
 
- FastLED.show();
-        delay(25);
-        FastLED.clear();
-  
+    // This is pointless because show() and delay() are both called in loop()
+    // and there's no point trying to adjust framerate here anyway if no colours
+    // are changing from frame to frame.
+    // FastLED.show();
+    // delay(25);
+    // FastLED.clear();
 }
-
-
-
