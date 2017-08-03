@@ -45,11 +45,11 @@ int startA, startB, startC, startD, startE, startF;
 void setup() {
 
     startA = 0;
-    startB = TRI_A;
-    startC = TRI_A+TRI_B;
-    startD = TRI_A+TRI_B+TRI_C;
-    startE = TRI_A+TRI_B+TRI_C+TRI_D;
-    startF = TRI_A+TRI_B+TRI_C+TRI_D+TRI_E;
+    startB = startA + TRI_A;
+    startC = startB + TRI_B;
+    startD = startC + TRI_C;
+    startE = startD + TRI_D;
+    startF = startE + TRI_E;
 
     // tell FastLED about the LED strip configuration
     FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
@@ -204,24 +204,12 @@ void totalAccident() {
 ** by Tom
 */
 int getTriangle(int index){
-    for (int i = 0; i < TRI_A; i++) {
-        if (triangleA[i] == index) return 0;
-    }
-    for (int i = 0; i < TRI_B; i++) {
-        if (triangleB[i] == index) return 1;
-    }
-    for (int i = 0; i < TRI_C; i++) {
-        if (triangleC[i] == index) return 2;
-    }
-    for (int i = 0; i < TRI_D; i++) {
-        if (triangleD[i] == index) return 3;
-    }
-    for (int i = 0; i < TRI_E; i++) {
-        if (triangleE[i] == index) return 4;
-    }
-    for (int i = 0; i < TRI_F; i++) {
-        if (triangleF[i] == index) return 5;
-    }
+    if (index >= startA && index < startB) return 0;
+    if (index >= startB && index < startC) return 1;
+    if (index >= startC && index < startD) return 2;
+    if (index >= startD && index < startE) return 3;
+    if (index >= startE && index < startF) return 4;
+    if (index >= startF && index < NUM_LEDS) return 5;
     return -1;
 }
 
